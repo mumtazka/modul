@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# Generate index.html with all files in the directory
+
+OUTPUT="index.html"
+
+# Start HTML
+cat > "$OUTPUT" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,10 +40,23 @@
 </head>
 <body>
     <h1>📁 Files</h1>
-    <div class="file-item">
-        <span class="file-name">Laporan_Konfigurasi_DNS_Imam Nur Ihsanuddin_XI TJKT-2(19) (1).pdf</span>
-        <a href="Laporan_Konfigurasi_DNS_Imam Nur Ihsanuddin_XI TJKT-2(19) (1).pdf" class="download-link" download>Download</a>
-    </div>
+EOF
+
+# Add each file (exclude index.html, generate.sh, .git, README.md)
+for file in *; do
+    if [ -f "$file" ] && [ "$file" != "index.html" ] && [ "$file" != "generate.sh" ] && [ "$file" != "README.md" ] && [ "$file" != ".gitignore" ]; then
+        echo "    <div class=\"file-item\">" >> "$OUTPUT"
+        echo "        <span class=\"file-name\">$file</span>" >> "$OUTPUT"
+        echo "        <a href=\"$file\" class=\"download-link\" download>Download</a>" >> "$OUTPUT"
+        echo "    </div>" >> "$OUTPUT"
+    fi
+done
+
+# Close HTML
+cat >> "$OUTPUT" << 'EOF'
 
 </body>
 </html>
+EOF
+
+echo "Generated $OUTPUT with all files!"
