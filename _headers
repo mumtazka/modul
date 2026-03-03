@@ -1,15 +1,19 @@
-# Force download for all non-HTML files
+# Auto-generated headers
 /cisco.html
-  Content-Disposition: attachment; filename="cisco.html"
+  Content-Disposition: attachment
+
+/Laporan_Konfigurasi_DNS_Imam%20Nur%20Ihsanuddin_XI%20TJKT-2%2819%29%20%281%29.pdf
+  Content-Disposition: attachment
 
 /lcisco.docx
-  Content-Disposition: attachment; filename="lcisco.docx"
+  Content-Disposition: attachment
 
-/push.sh
-  Content-Disposition: attachment; filename="push.sh"
+/netlify.toml
+  Content-Disposition: attachment
+
+/package.json
+  Content-Disposition: attachment
 
 /rufus-4.12p.exe
-  Content-Disposition: attachment; filename="rufus-4.12p.exe"
-
-/*.pdf
   Content-Disposition: attachment
+

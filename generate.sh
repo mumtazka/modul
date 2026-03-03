@@ -1,11 +1,19 @@
 #!/bin/bash
 
-# Generate index.html with all files in the directory
-
+BASE="https://modulnas.netlify.app"
 OUTPUT="index.html"
+HEADERS="_headers"
 
-# Start HTML
-cat > "$OUTPUT" << 'EOF'
+# Simple URL encode: replace spaces with %20
+urlencode() {
+    local s="${1// /%20}"
+    s="${s//(/%28}"
+    s="${s//)/%29}"
+    echo "$s"
+}
+
+# --- Generate index.html ---
+cat > "$OUTPUT" << 'HTMLHEAD'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,9 +34,12 @@ cat > "$OUTPUT" << 'EOF'
             border: 1px solid #ddd;
             margin-bottom: 10px;
             border-radius: 4px;
+        }
+        .file-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 8px;
         }
         .file-name { font-weight: bold; }
         .download-link {
@@ -36,27 +47,86 @@ cat > "$OUTPUT" << 'EOF'
             text-decoration: none;
         }
         .download-link:hover { text-decoration: underline; }
+        .curl-box {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .curl-cmd {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: all;
+        }
+        .btn-copy {
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-copy:hover { background: #0055aa; }
     </style>
 </head>
 <body>
     <h1>📁 Files</h1>
-EOF
+HTMLHEAD
 
-# Add each file (exclude index.html, generate.sh, .git, README.md)
+# --- Generate _headers ---
+echo "# Auto-generated headers" > "$HEADERS"
+
+i=0
+
 for file in *; do
-    if [ -f "$file" ] && [ "$file" != "index.html" ] && [ "$file" != "generate.sh" ] && [ "$file" != "README.md" ] && [ "$file" != ".gitignore" ]; then
-        echo "    <div class=\"file-item\">" >> "$OUTPUT"
-        echo "        <span class=\"file-name\">$file</span>" >> "$OUTPUT"
-        echo "        <a href=\"$file\" class=\"download-link\" download>Download</a>" >> "$OUTPUT"
-        echo "    </div>" >> "$OUTPUT"
-    fi
+    [ ! -f "$file" ] && continue
+    case "$file" in
+        index.html|generate.sh|push.sh|README.md|.gitignore|_headers|_redirects) continue ;;
+    esac
+
+    encoded=$(urlencode "$file")
+
+    echo "    <div class=\"file-item\">" >> "$OUTPUT"
+    echo "        <div class=\"file-top\">" >> "$OUTPUT"
+    echo "            <span class=\"file-name\">$file</span>" >> "$OUTPUT"
+    echo "            <a href=\"$encoded\" class=\"download-link\" download>Download</a>" >> "$OUTPUT"
+    echo "        </div>" >> "$OUTPUT"
+    echo "        <div class=\"curl-box\">" >> "$OUTPUT"
+    echo "            <span class=\"curl-cmd\" id=\"cmd-$i\">curl -O \"${BASE}/${encoded}\"</span>" >> "$OUTPUT"
+    echo "            <button class=\"btn-copy\" onclick=\"copyCmd($i, this)\">Copy</button>" >> "$OUTPUT"
+    echo "        </div>" >> "$OUTPUT"
+    echo "    </div>" >> "$OUTPUT"
+
+    echo "/$encoded" >> "$HEADERS"
+    echo "  Content-Disposition: attachment" >> "$HEADERS"
+    echo "" >> "$HEADERS"
+
+    i=$((i + 1))
 done
 
-# Close HTML
-cat >> "$OUTPUT" << 'EOF'
+cat >> "$OUTPUT" << 'HTMLFOOT'
 
+    <script>
+        function copyCmd(i, btn) {
+            var text = document.getElementById('cmd-' + i).textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+    </script>
 </body>
 </html>
-EOF
+HTMLFOOT
 
-echo "Generated $OUTPUT with all files!"
+echo "Generated $OUTPUT with $i files"

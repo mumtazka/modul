@@ -1,0 +1,8 @@
+{
+  "name": "modulnas-file-server",
+  "version": "1.0.0",
+  "description": "File hosting with upload support via Netlify Blobs",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
