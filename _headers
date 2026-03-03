@@ -1,0 +1,15 @@
+# Force download for all non-HTML files
+/cisco.html
+  Content-Disposition: attachment; filename="cisco.html"
+
+/lcisco.docx
+  Content-Disposition: attachment; filename="lcisco.docx"
+
+/push.sh
+  Content-Disposition: attachment; filename="push.sh"
+
+/rufus-4.12p.exe
+  Content-Disposition: attachment; filename="rufus-4.12p.exe"
+
+/*.pdf
+  Content-Disposition: attachment
