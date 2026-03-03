@@ -80,7 +80,10 @@ cat > "$OUTPUT" << 'HTMLHEAD'
     </style>
 </head>
 <body>
-    <h1>📁 Files</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h1>📁 Files</h1>
+        <a href="upload.html" style="background:#0066cc;color:white;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:0.85rem;font-weight:bold">📤 Upload</a>
+    </div>
 HTMLHEAD
 
 # --- Generate _headers ---
@@ -91,7 +94,7 @@ i=0
 for file in *; do
     [ ! -f "$file" ] && continue
     case "$file" in
-        index.html|generate.sh|push.sh|README.md|.gitignore|_headers|_redirects) continue ;;
+        index.html|generate.sh|push.sh|README.md|.gitignore|_headers|_redirects|upload.html|netlify.toml|package.json|package-lock.json) continue ;;
     esac
 
     encoded=$(urlencode "$file")
