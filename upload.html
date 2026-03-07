@@ -567,22 +567,22 @@
             <div class="curl-block">
                 <pre id="curlExample">curl -H "X-Upload-Token: YOUR_TOKEN" \
   -F "file=@myfile.pdf" \
-  https://modulnas.netlify.app/api/upload</pre>
+  /api/upload</pre>
                 <button class="copy-btn" onclick="copyCurl()">Copy</button>
             </div>
             <div style="margin-top: 12px;">
                 <div class="curl-block">
-                    <pre>## List uploaded files
-curl https://modulnas.netlify.app/api/files
+                    <pre id="curlManageExample">## List uploaded files
+curl /api/files
 
 ## Download a file
 curl -o "filename.pdf" \
-  "https://modulnas.netlify.app/api/files?file=filename.pdf"
+  "/api/files?file=filename.pdf"
 
 ## Delete a file
 curl -X DELETE \
   -H "X-Upload-Token: YOUR_TOKEN" \
-  "https://modulnas.netlify.app/api/files?file=filename.pdf"</pre>
+  "/api/files?file=filename.pdf"</pre>
                     <button class="copy-btn" onclick="copyEl(this.previousElementSibling)">Copy</button>
                 </div>
             </div>
@@ -620,6 +620,7 @@ curl -X DELETE \
     <script>
         const API_BASE = '';
         const TOKEN_KEY = 'modulnas_upload_token';
+        const SITE_ORIGIN = window.location.origin;
 
         // ─── Token ───
         function getToken() {
@@ -637,7 +638,19 @@ curl -X DELETE \
             document.getElementById('curlExample').textContent =
                 `curl -H "X-Upload-Token: ${token}" \\
   -F "file=@myfile.pdf" \\
-  https://modulnas.netlify.app/api/upload`;
+  ${SITE_ORIGIN}/api/upload`;
+            document.getElementById('curlManageExample').textContent =
+                `## List uploaded files
+curl ${SITE_ORIGIN}/api/files
+
+## Download a file
+curl -o "filename.pdf" \\
+  "${SITE_ORIGIN}/api/files?file=filename.pdf"
+
+## Delete a file
+curl -X DELETE \\
+  -H "X-Upload-Token: YOUR_TOKEN" \\
+  "${SITE_ORIGIN}/api/files?file=filename.pdf"`;
         }
 
         // ─── Status ───
@@ -651,16 +664,45 @@ curl -X DELETE \
         // ─── Copy ───
         function copyCurl() {
             const text = document.getElementById('curlExample').textContent;
-            navigator.clipboard.writeText(text).then(() => showStatus('Curl command copied!', 'success'));
+            copyToClipboard(text)
+                .then(() => showStatus('Curl command copied!', 'success'))
+                .catch(() => showStatus('Copy failed. Your browser blocked clipboard access.', 'error'));
         }
         function copyEl(el) {
-            navigator.clipboard.writeText(el.textContent).then(() => showStatus('Copied!', 'success'));
+            copyToClipboard(el.textContent)
+                .then(() => showStatus('Copied!', 'success'))
+                .catch(() => showStatus('Copy failed. Your browser blocked clipboard access.', 'error'));
         }
         function copyText(text, btn) {
-            navigator.clipboard.writeText(text).then(() => {
+            copyToClipboard(text).then(() => {
                 const prev = btn.textContent;
                 btn.textContent = '✓';
                 setTimeout(() => btn.textContent = prev, 1200);
+            }).catch(() => showStatus('Copy failed. Your browser blocked clipboard access.', 'error'));
+        }
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            }
+
+            return new Promise((resolve, reject) => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, ta.value.length);
+                try {
+                    const ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    if (ok) resolve();
+                    else reject(new Error('Copy command failed'));
+                } catch (err) {
+                    document.body.removeChild(ta);
+                    reject(err);
+                }
             });
         }
 
@@ -793,26 +835,62 @@ curl -X DELETE \
 
                 container.innerHTML = '';
                 for (const f of data.files) {
-                    const curlCmd = f.curl || `curl -o "${f.name}" "${f.downloadUrl}"`;
                     const div = document.createElement('div');
                     div.className = 'file-entry';
-                    div.innerHTML = `
-                        <div class="file-row">
-                            <span class="file-icon">${fileIcon(f.name)}</span>
-                            <div class="file-details">
-                                <div class="file-name-text">${f.name}</div>
-                                <div class="file-meta">${formatSize(f.size)} · ${formatDate(f.uploadedAt)}</div>
-                            </div>
-                            <div class="file-actions">
-                                <a href="${f.downloadUrl}" class="btn btn-secondary" style="padding:6px 12px;font-size:0.75rem;text-decoration:none;">↓ Download</a>
-                                <button class="btn btn-danger" onclick="deleteFile('${f.name.replace(/'/g, "\\'")}', this)">✕</button>
-                            </div>
-                        </div>
-                        <div class="file-curl">
-                            <code>${curlCmd}</code>
-                            <button class="btn btn-secondary" style="padding:3px 8px;font-size:0.68rem;" onclick="copyText(\`${curlCmd.replace(/`/g, '\\`')}\`, this)">Copy</button>
-                        </div>
-                    `;
+
+                    const fileName = String(f.name || '');
+                    const defaultPath = `/api/files?file=${encodeURIComponent(fileName)}`;
+                    const downloadHref = f.downloadPath || f.downloadUrl || defaultPath;
+                    const curlTarget = f.downloadUrl || `${SITE_ORIGIN}${f.downloadPath || defaultPath}`;
+                    const curlCmd = f.curl || `curl -o "${fileName}" "${curlTarget}"`;
+
+                    const row = document.createElement('div');
+                    row.className = 'file-row';
+
+                    const icon = document.createElement('span');
+                    icon.className = 'file-icon';
+                    icon.textContent = fileIcon(fileName);
+
+                    const details = document.createElement('div');
+                    details.className = 'file-details';
+                    const nameText = document.createElement('div');
+                    nameText.className = 'file-name-text';
+                    nameText.textContent = fileName;
+                    const meta = document.createElement('div');
+                    meta.className = 'file-meta';
+                    meta.textContent = `${formatSize(f.size)} · ${formatDate(f.uploadedAt)}`;
+                    details.append(nameText, meta);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'file-actions';
+
+                    const downloadBtn = document.createElement('a');
+                    downloadBtn.href = downloadHref;
+                    downloadBtn.className = 'btn btn-secondary';
+                    downloadBtn.style.cssText = 'padding:6px 12px;font-size:0.75rem;text-decoration:none;';
+                    downloadBtn.textContent = '↓ Download';
+                    downloadBtn.setAttribute('download', '');
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-danger';
+                    deleteBtn.textContent = '✕';
+                    deleteBtn.addEventListener('click', () => deleteFile(fileName, deleteBtn));
+
+                    actions.append(downloadBtn, deleteBtn);
+                    row.append(icon, details, actions);
+
+                    const curlRow = document.createElement('div');
+                    curlRow.className = 'file-curl';
+                    const curlCode = document.createElement('code');
+                    curlCode.textContent = curlCmd;
+                    const curlCopyBtn = document.createElement('button');
+                    curlCopyBtn.className = 'btn btn-secondary';
+                    curlCopyBtn.style.cssText = 'padding:3px 8px;font-size:0.68rem;';
+                    curlCopyBtn.textContent = 'Copy';
+                    curlCopyBtn.addEventListener('click', () => copyText(curlCmd, curlCopyBtn));
+                    curlRow.append(curlCode, curlCopyBtn);
+
+                    div.append(row, curlRow);
                     container.appendChild(div);
                 }
             } catch (e) {

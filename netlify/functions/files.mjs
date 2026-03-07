@@ -13,6 +13,7 @@ export default async (req, context) => {
 
     const store = getStore("uploads");
     const url = new URL(req.url);
+    const origin = url.origin;
     const fileName = url.searchParams.get("file");
 
     // DELETE a file
@@ -99,8 +100,9 @@ export default async (req, context) => {
                 size: meta.size ? parseInt(meta.size) : 0,
                 type: meta.contentType || "unknown",
                 uploadedAt: meta.uploadedAt || "unknown",
-                downloadUrl: `https://modulnas.netlify.app/api/files?file=${encodeURIComponent(blob.key)}`,
-                curl: `curl -o "${blob.key}" "https://modulnas.netlify.app/api/files?file=${encodeURIComponent(blob.key)}"`,
+                downloadPath: `/api/files?file=${encodeURIComponent(blob.key)}`,
+                downloadUrl: `${origin}/api/files?file=${encodeURIComponent(blob.key)}`,
+                curl: `curl -o "${blob.key}" "${origin}/api/files?file=${encodeURIComponent(blob.key)}"`,
             });
         }
 

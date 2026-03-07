@@ -69,6 +69,10 @@ export default async (req, context) => {
         );
     }
 
+    const origin = new URL(req.url).origin;
+    const encodedName = encodeURIComponent(file.name);
+    const downloadPath = `/api/files?file=${encodedName}`;
+
     // Store in Netlify Blobs
     try {
         const store = getStore("uploads");
@@ -92,8 +96,9 @@ export default async (req, context) => {
                     type: file.type,
                 },
                 download: {
-                    url: `https://modulnas.netlify.app/api/files?file=${encodeURIComponent(file.name)}`,
-                    curl: `curl -o "${file.name}" "https://modulnas.netlify.app/api/files?file=${encodeURIComponent(file.name)}"`,
+                    path: downloadPath,
+                    url: `${origin}${downloadPath}`,
+                    curl: `curl -o "${file.name}" "${origin}${downloadPath}"`,
                 },
             },
             { status: 200, headers }
