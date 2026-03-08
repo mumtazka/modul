@@ -14,9 +14,18 @@
 /mikrotik.md
   Content-Disposition: attachment
 
+/postcss.config.js
+  Content-Disposition: attachment
+
 /rufus-4.12p.exe
   Content-Disposition: attachment
 
+/tailwind.config.js
+  Content-Disposition: attachment
+
 /test.html
+  Content-Disposition: attachment
+
+/vite.config.js
   Content-Disposition: attachment
 

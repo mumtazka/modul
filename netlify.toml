@@ -1,11 +1,12 @@
 [build]
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# Redirect API paths to functions
+# SPA fallback — must come AFTER function redirects
 [[redirects]]
   from = "/api/upload"
   to = "/.netlify/functions/upload"
@@ -19,4 +20,10 @@
 [[redirects]]
   from = "/api/files/*"
   to = "/.netlify/functions/files"
+  status = 200
+
+# Catch-all for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
