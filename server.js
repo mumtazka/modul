@@ -4,9 +4,23 @@ import cors from 'cors'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { exec } from 'child_process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Auto-sync function
+function syncToGithub(message) {
+    console.log(`[Git] Syncing: ${message}...`)
+    const repoPath = __dirname
+    exec(`git add uploads/ && git commit -m "${message}" && git push origin HEAD`, { cwd: repoPath }, (err, stdout, stderr) => {
+        if (err) {
+            console.error('[Git] Failed to sync:', err.message)
+            return
+        }
+        console.log('[Git] Synchronized with GitHub repo successfully!')
+    })
+}
 
 const app = express()
 const PORT = 3001
@@ -162,6 +176,8 @@ app.post('/api/upload', (req, res) => {
             uploadedAt: new Date().toISOString(),
         })
 
+        syncToGithub(`Upload file: ${req.file.filename}`)
+
         return res.json({
             success: true,
             message: `File '${req.file.filename}' uploaded successfully.`,
@@ -201,6 +217,7 @@ app.delete('/api/files', (req, res) => {
     try {
         fs.unlinkSync(filePath)
         deleteMeta(fileName)
+        syncToGithub(`Delete file: ${fileName}`)
         return res.json({ success: true, message: `File '${fileName}' deleted.` })
     } catch (e) {
         return res.status(500).json({ error: 'Failed to delete: ' + e.message })
