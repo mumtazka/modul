@@ -82,7 +82,6 @@ cat > "$OUTPUT" << 'HTMLHEAD'
 <body>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h1>📁 Files</h1>
-        <a href="upload.html" style="background:#0066cc;color:white;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:0.85rem;font-weight:bold">📤 Upload</a>
     </div>
 HTMLHEAD
 
