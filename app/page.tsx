@@ -39,6 +39,27 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+
+  useEffect(() => {
+    if (document.documentElement.classList.contains("dark")) {
+      setTheme("dark");
+    } else {
+      setTheme("light");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === "light") {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setTheme("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setTheme("light");
+    }
+  };
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -82,19 +103,28 @@ export default function HomePage() {
       <header className="border-b border-[rgba(99,102,241,0.1)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
               📁 FileVault
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
               Browse and download shared files
             </p>
           </div>
-          <a
-            href="/admin"
-            className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors duration-200 opacity-60 hover:opacity-100"
-          >
-            Admin →
-          </a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 sm:p-2 rounded-lg text-lg hover:bg-[var(--glass)] transition-colors opacity-70 hover:opacity-100"
+              title="Toggle theme"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+            <a
+              href="/admin"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors duration-200 opacity-60 hover:opacity-100"
+            >
+              Admin →
+            </a>
+          </div>
         </div>
       </header>
 

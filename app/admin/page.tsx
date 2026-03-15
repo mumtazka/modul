@@ -25,6 +25,27 @@ export default function AdminPage() {
         type: "success" | "error";
     } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [theme, setTheme] = useState<"light" | "dark" | null>(null);
+
+    useEffect(() => {
+        if (document.documentElement.classList.contains("dark")) {
+            setTheme("dark");
+        } else {
+            setTheme("light");
+        }
+    }, []);
+
+    const toggleTheme = () => {
+        if (theme === "light") {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+            setTheme("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+            setTheme("light");
+        }
+    };
 
     useEffect(() => {
         const savedToken = localStorage.getItem("admin_token");
@@ -178,7 +199,7 @@ export default function AdminPage() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
                     <div>
                         <a href="/" className="inline-block">
-                            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
                                 🔐 Admin Panel
                             </h1>
                         </a>
@@ -187,6 +208,13 @@ export default function AdminPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={toggleTheme}
+                            className="p-1.5 sm:p-2 rounded-lg text-lg hover:bg-[var(--glass)] transition-colors opacity-70 hover:opacity-100"
+                            title="Toggle theme"
+                        >
+                            {theme === "dark" ? "☀️" : "🌙"}
+                        </button>
                         <a href="/" className="btn-ghost text-xs">
                             ← Back
                         </a>
