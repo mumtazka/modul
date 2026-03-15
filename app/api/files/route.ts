@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        const files = listFiles();
+        const files = await listFiles();
         return NextResponse.json(files);
     } catch (error) {
         console.error("Error listing files:", error);

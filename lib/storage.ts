@@ -1,7 +1,28 @@
-import fs from "fs";
-import path from "path";
+// GitHub API-backed storage.
+// Files are committed directly to the repository's storage/ folder.
 
-const STORAGE_DIR = path.join(process.cwd(), "storage");
+const GITHUB_API = "https://api.github.com";
+
+function getConfig() {
+    const token = process.env.GITHUB_TOKEN;
+    const repo = process.env.GITHUB_REPO;
+    const branch = process.env.GITHUB_BRANCH || "main";
+    const storagePath = process.env.GITHUB_STORAGE_PATH || "storage";
+
+    if (!token || !repo) {
+        throw new Error("GITHUB_TOKEN and GITHUB_REPO must be set in environment variables.");
+    }
+    return { token, repo, branch, storagePath };
+}
+
+function githubHeaders(token: string) {
+    return {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    };
+}
 
 export interface FileInfo {
     name: string;
@@ -9,75 +30,129 @@ export interface FileInfo {
     modified: string;
     download_url: string;
     curl_command: string;
+    sha: string; // needed for GitHub delete/update
 }
 
-function ensureStorageDir() {
-    if (!fs.existsSync(STORAGE_DIR)) {
-        fs.mkdirSync(STORAGE_DIR, { recursive: true });
-    }
-}
-
-export function listFiles(): FileInfo[] {
-    ensureStorageDir();
+export async function listFiles(): Promise<FileInfo[]> {
+    const { token, repo, branch, storagePath } = getConfig();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-    const entries = fs.readdirSync(STORAGE_DIR);
-    const files: FileInfo[] = [];
+    const res = await fetch(
+        `${GITHUB_API}/repos/${repo}/contents/${storagePath}?ref=${branch}`,
+        { headers: githubHeaders(token), cache: "no-store" }
+    );
 
-    for (const name of entries) {
-        const filePath = path.join(STORAGE_DIR, name);
-        const stat = fs.statSync(filePath);
-        if (!stat.isFile()) continue;
+    if (res.status === 404) return []; // folder doesn't exist yet
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
 
-        const encodedName = encodeURIComponent(name);
-        files.push({
-            name,
-            size: stat.size,
-            modified: stat.mtime.toISOString(),
-            download_url: `/api/files/${encodedName}`,
-            curl_command: `curl -L "${siteUrl}/api/files/${encodedName}" -o "${name}"`,
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    const files: FileInfo[] = items
+        .filter((item: { type: string }) => item.type === "file")
+        .map((item: { name: string; size: number; sha: string }) => {
+            const encodedName = encodeURIComponent(item.name);
+            return {
+                name: item.name,
+                size: item.size,
+                modified: new Date().toISOString(), // GitHub doesn't return mtime directly here
+                download_url: `/api/files/${encodedName}`,
+                curl_command: `curl -L "${siteUrl}/api/files/${encodedName}" -o "${item.name}"`,
+                sha: item.sha,
+            };
         });
+
+    return files;
+}
+
+export async function getFileSha(filename: string): Promise<string | null> {
+    const { token, repo, branch, storagePath } = getConfig();
+    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+
+    const res = await fetch(
+        `${GITHUB_API}/repos/${repo}/contents/${storagePath}/${encodeURIComponent(safeName)}?ref=${branch}`,
+        { headers: githubHeaders(token), cache: "no-store" }
+    );
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.sha ?? null;
+}
+
+export async function downloadFileContent(filename: string): Promise<Buffer | null> {
+    const { token, repo, branch, storagePath } = getConfig();
+    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+
+    const res = await fetch(
+        `${GITHUB_API}/repos/${repo}/contents/${storagePath}/${encodeURIComponent(safeName)}?ref=${branch}`,
+        { headers: githubHeaders(token), cache: "no-store" }
+    );
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.content) return null;
+
+    // GitHub returns base64 encoded content
+    return Buffer.from(data.content.replace(/\n/g, ""), "base64");
+}
+
+export async function saveFile(filename: string, buffer: Buffer): Promise<FileInfo> {
+    const { token, repo, branch, storagePath } = getConfig();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const path = `${storagePath}/${safeName}`;
+
+    // Check if file exists to get SHA (required for updates)
+    const existingSha = await getFileSha(safeName);
+
+    const body: Record<string, string> = {
+        message: `Upload: ${safeName}`,
+        content: buffer.toString("base64"),
+        branch,
+    };
+    if (existingSha) body.sha = existingSha;
+
+    const res = await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
+        method: "PUT",
+        headers: githubHeaders(token),
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(`GitHub upload failed: ${err.message}`);
     }
 
-    return files.sort((a, b) => b.modified.localeCompare(a.modified));
-}
-
-export function getFilePath(filename: string): string {
-    const safeName = path.basename(filename);
-    return path.join(STORAGE_DIR, safeName);
-}
-
-export function fileExists(filename: string): boolean {
-    return fs.existsSync(getFilePath(filename));
-}
-
-export async function saveFile(
-    filename: string,
-    buffer: Buffer
-): Promise<FileInfo> {
-    ensureStorageDir();
-    const safeName = path.basename(filename);
-    const filePath = path.join(STORAGE_DIR, safeName);
-    fs.writeFileSync(filePath, buffer);
-
-    const stat = fs.statSync(filePath);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const data = await res.json();
     const encodedName = encodeURIComponent(safeName);
 
     return {
         name: safeName,
-        size: stat.size,
-        modified: stat.mtime.toISOString(),
+        size: buffer.byteLength,
+        modified: new Date().toISOString(),
         download_url: `/api/files/${encodedName}`,
         curl_command: `curl -L "${siteUrl}/api/files/${encodedName}" -o "${safeName}"`,
+        sha: data.content?.sha ?? "",
     };
 }
 
-export function deleteFileFromStorage(filename: string): boolean {
-    const filePath = getFilePath(filename);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        return true;
-    }
-    return false;
+export async function deleteFileFromStorage(filename: string): Promise<boolean> {
+    const { token, repo, branch, storagePath } = getConfig();
+    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const path = `${storagePath}/${safeName}`;
+
+    const sha = await getFileSha(safeName);
+    if (!sha) return false;
+
+    const res = await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
+        method: "DELETE",
+        headers: githubHeaders(token),
+        body: JSON.stringify({
+            message: `Delete: ${safeName}`,
+            sha,
+            branch,
+        }),
+    });
+
+    return res.ok;
 }
