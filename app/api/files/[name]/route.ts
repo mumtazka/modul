@@ -39,10 +39,12 @@ export async function GET(
 
         const contentType = mimeTypes[ext] || "application/octet-stream";
 
+        const contentDisposition = `attachment; filename="${filename.replace(/"/g, '\\"')}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+
         return new NextResponse(fileBuffer, {
             headers: {
                 "Content-Type": contentType,
-                "Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,
+                "Content-Disposition": contentDisposition,
                 "Content-Length": fileBuffer.length.toString(),
             },
         });

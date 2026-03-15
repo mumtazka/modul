@@ -5,20 +5,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --bg-card-hover: rgba(30, 41, 59, 0.8);
-  --border-color: rgba(99, 102, 241, 0.15);
-  --border-hover: rgba(99, 102, 241, 0.35);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --border-color: rgba(148, 163, 184, 0.3);
+  --border-hover: rgba(100, 116, 139, 0.4);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
   --danger: #ef4444;
-  --danger-hover: #f87171;
-  --success: #22c55e;
-  --glass: rgba(255, 255, 255, 0.03);
+  --danger-hover: #dc2626;
+  --success: #16a34a;
+  --glass: rgba(0, 0, 0, 0.05);
+
+  --mesh-indigo: rgba(79, 70, 229, 0.04);
+  --mesh-purple: rgba(124, 58, 237, 0.03);
+  --skeleton-base: var(--bg-secondary);
+  --skeleton-highlight: rgba(79, 70, 229, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: rgba(30, 41, 59, 0.6);
+    --bg-card-hover: rgba(51, 65, 85, 0.7);
+    --border-color: rgba(148, 163, 184, 0.15);
+    --border-hover: rgba(148, 163, 184, 0.3);
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --danger: #ef4444;
+    --danger-hover: #f87171;
+    --success: #22c55e;
+    --glass: rgba(255, 255, 255, 0.08);
+
+    --mesh-indigo: rgba(99, 102, 241, 0.04);
+    --mesh-purple: rgba(139, 92, 246, 0.03);
+    --skeleton-base: var(--bg-secondary);
+    --skeleton-highlight: rgba(148, 163, 184, 0.1);
+  }
 }
 
 * {
@@ -116,7 +145,7 @@ body {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-secondary) 25%, rgba(99, 102, 241, 0.08) 50%, var(--bg-secondary) 75%);
+  background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-highlight) 50%, var(--skeleton-base) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
@@ -151,8 +180,8 @@ body {
 /* Gradient background mesh */
 .bg-mesh {
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 0%, var(--mesh-indigo) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, var(--mesh-purple) 0%, transparent 50%),
     var(--bg-primary);
 }
 

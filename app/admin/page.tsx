@@ -396,7 +396,7 @@ export default function AdminPage() {
                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                     <a
                                                         href={file.download_url}
-                                                        download
+                                                        download={file.name}
                                                         className="btn-ghost text-xs"
                                                     >
                                                         ⬇

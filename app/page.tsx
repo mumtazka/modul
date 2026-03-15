@@ -191,18 +191,36 @@ export default function HomePage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <div className="hidden sm:flex items-center gap-1.5 group">
+                      <input
+                        type="text"
+                        readOnly
+                        value={file.curl_command}
+                        className="text-[11px] font-mono bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] rounded px-2 py-1 w-32 md:w-56 outline-none focus:border-[var(--accent)] transition-colors cursor-text"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        title="cURL Command"
+                      />
+                      <button
+                        onClick={() => copyToClipboard(file.curl_command, index)}
+                        className={`btn-ghost !px-2 !py-1 ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
+                        title="Copy curl command"
+                      >
+                        {copiedIndex === index ? "✓" : "📋"}
+                      </button>
+                    </div>
+                    {/* mobile copy button */}
                     <button
                       onClick={() => copyToClipboard(file.curl_command, index)}
-                      className={`btn-ghost relative ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
+                      className={`sm:hidden btn-ghost relative !py-1 !px-2 text-[11px] ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
                       title="Copy curl command"
                     >
-                      {copiedIndex === index ? "✓ Copied" : "📋 curl"}
+                      {copiedIndex === index ? "✓ Copied" : "📋 Copy cURL"}
                     </button>
                     <a
                       href={file.download_url}
-                      download
-                      className="btn-primary !py-[6px] !px-3 sm:!px-4 text-xs sm:text-sm inline-flex items-center gap-1"
+                      download={file.name}
+                      className="btn-primary !py-1 !px-3 sm:!px-4 text-[11px] sm:text-xs inline-flex items-center gap-1"
                     >
                       ⬇ <span className="hidden sm:inline">Download</span>
                     </a>
