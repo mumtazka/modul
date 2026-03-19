@@ -2,19 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { formatFileSize } from "@/lib/utils";
-
-interface FileItem {
-    name: string;
-    size: number;
-    modified: string;
-    download_url: string;
-    curl_command: string;
-}
+import { useTheme } from "@/hooks/useTheme";
+import { FileItem, getFileColor, getFileExt, MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL } from "@/lib/constants";
 
 export default function AdminPage() {
     const [token, setToken] = useState("");
     const [tokenInput, setTokenInput] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loginLoading, setLoginLoading] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
     const [files, setFiles] = useState<FileItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -25,27 +21,7 @@ export default function AdminPage() {
         type: "success" | "error";
     } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [theme, setTheme] = useState<"light" | "dark" | null>(null);
-
-    useEffect(() => {
-        if (document.documentElement.classList.contains("dark")) {
-            setTheme("dark");
-        } else {
-            setTheme("light");
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        if (theme === "light") {
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-            setTheme("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-            localStorage.setItem("theme", "light");
-            setTheme("light");
-        }
-    };
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const savedToken = localStorage.getItem("admin_token");
@@ -55,10 +31,10 @@ export default function AdminPage() {
         }
     }, []);
 
-    const showToast = (message: string, type: "success" | "error") => {
+    const showToast = useCallback((message: string, type: "success" | "error") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
-    };
+    }, []);
 
     const fetchFiles = useCallback(async () => {
         try {
@@ -72,7 +48,7 @@ export default function AdminPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showToast]);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -80,12 +56,35 @@ export default function AdminPage() {
         }
     }, [isAuthenticated, fetchFiles]);
 
-    const handleSaveToken = () => {
-        if (!tokenInput.trim()) return;
-        localStorage.setItem("admin_token", tokenInput.trim());
-        setToken(tokenInput.trim());
-        setIsAuthenticated(true);
-        setTokenInput("");
+    const handleSaveToken = async () => {
+        const trimmed = tokenInput.trim();
+        if (!trimmed) return;
+
+        setLoginLoading(true);
+        setLoginError(null);
+
+        try {
+            const res = await fetch("/api/auth/validate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: trimmed }),
+            });
+
+            const data = await res.json();
+
+            if (data.valid) {
+                localStorage.setItem("admin_token", trimmed);
+                setToken(trimmed);
+                setIsAuthenticated(true);
+                setTokenInput("");
+            } else {
+                setLoginError(data.error || "Invalid token");
+            }
+        } catch {
+            setLoginError("Failed to validate token. Please try again.");
+        } finally {
+            setLoginLoading(false);
+        }
     };
 
     const handleLogout = () => {
@@ -97,6 +96,14 @@ export default function AdminPage() {
 
     const handleUpload = async () => {
         if (!selectedFile) return;
+
+        if (selectedFile.size > MAX_FILE_SIZE) {
+            showToast(
+                `File too large (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Maximum is ${MAX_FILE_SIZE_LABEL}.`,
+                "error"
+            );
+            return;
+        }
 
         setUploading(true);
         try {
@@ -175,23 +182,6 @@ export default function AdminPage() {
         setDragOver(false);
     };
 
-    const getFileColor = (name: string): string => {
-        const ext = name.split(".").pop()?.toLowerCase() || "";
-        const colors: Record<string, string> = {
-            pdf: "bg-red-500/20 text-red-400",
-            doc: "bg-blue-500/20 text-blue-400",
-            docx: "bg-blue-500/20 text-blue-400",
-            md: "bg-emerald-500/20 text-emerald-400",
-            txt: "bg-gray-500/20 text-gray-400",
-            png: "bg-purple-500/20 text-purple-400",
-            jpg: "bg-purple-500/20 text-purple-400",
-            jpeg: "bg-purple-500/20 text-purple-400",
-            zip: "bg-yellow-500/20 text-yellow-400",
-            exe: "bg-orange-500/20 text-orange-400",
-        };
-        return colors[ext] || "bg-indigo-500/20 text-indigo-400";
-    };
-
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -212,6 +202,7 @@ export default function AdminPage() {
                             onClick={toggleTheme}
                             className="p-1.5 sm:p-2 rounded-lg text-lg hover:bg-[var(--glass)] transition-colors opacity-70 hover:opacity-100"
                             title="Toggle theme"
+                            aria-label="Toggle theme"
                         >
                             {theme === "dark" ? "☀️" : "🌙"}
                         </button>
@@ -244,6 +235,11 @@ export default function AdminPage() {
                                     Enter your token to access the admin panel
                                 </p>
                             </div>
+                            {loginError && (
+                                <div className="mb-4 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--danger)] text-sm text-center">
+                                    {loginError}
+                                </div>
+                            )}
                             <div className="flex gap-2">
                                 <input
                                     type="password"
@@ -252,9 +248,21 @@ export default function AdminPage() {
                                     onKeyDown={(e) => e.key === "Enter" && handleSaveToken()}
                                     placeholder="Your admin token..."
                                     className="input-field flex-1"
+                                    disabled={loginLoading}
+                                    autoComplete="current-password"
                                 />
-                                <button onClick={handleSaveToken} className="btn-primary">
-                                    Login
+                                <button
+                                    onClick={handleSaveToken}
+                                    className="btn-primary flex items-center gap-2"
+                                    disabled={loginLoading || !tokenInput.trim()}
+                                >
+                                    {loginLoading ? (
+                                        <>
+                                            <span className="spinner" /> Verifying...
+                                        </>
+                                    ) : (
+                                        "Login"
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -268,6 +276,9 @@ export default function AdminPage() {
                         <div className="glass-card p-6">
                             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                                 📤 Upload File
+                                <span className="text-xs font-normal text-[var(--text-secondary)]">
+                                    (max {MAX_FILE_SIZE_LABEL})
+                                </span>
                             </h2>
 
                             <div
@@ -296,6 +307,11 @@ export default function AdminPage() {
                                         </p>
                                         <p className="text-sm text-[var(--text-secondary)] mt-1">
                                             {formatFileSize(selectedFile.size)}
+                                            {selectedFile.size > MAX_FILE_SIZE && (
+                                                <span className="text-[var(--danger)] ml-2">
+                                                    ⚠️ Exceeds {MAX_FILE_SIZE_LABEL} limit
+                                                </span>
+                                            )}
                                         </p>
                                     </div>
                                 ) : (
@@ -304,7 +320,7 @@ export default function AdminPage() {
                                             Drop a file here or click to browse
                                         </p>
                                         <p className="text-sm text-[var(--text-secondary)] mt-1">
-                                            Any file type accepted
+                                            Any file type accepted (max {MAX_FILE_SIZE_LABEL})
                                         </p>
                                     </div>
                                 )}
@@ -323,7 +339,7 @@ export default function AdminPage() {
                                     </button>
                                     <button
                                         onClick={handleUpload}
-                                        disabled={uploading}
+                                        disabled={uploading || selectedFile.size > MAX_FILE_SIZE}
                                         className="btn-primary flex items-center gap-2"
                                     >
                                         {uploading ? (
@@ -394,11 +410,7 @@ export default function AdminPage() {
                                                 <div
                                                     className={`file-icon ${getFileColor(file.name)}`}
                                                 >
-                                                    {file.name
-                                                        .split(".")
-                                                        .pop()
-                                                        ?.toUpperCase()
-                                                        .slice(0, 4)}
+                                                    {getFileExt(file.name)}
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
@@ -426,12 +438,14 @@ export default function AdminPage() {
                                                         href={file.download_url}
                                                         download={file.name}
                                                         className="btn-ghost text-xs"
+                                                        aria-label={`Download ${file.name}`}
                                                     >
                                                         ⬇
                                                     </a>
                                                     <button
                                                         onClick={() => handleDelete(file.name)}
                                                         className="btn-danger text-xs"
+                                                        aria-label={`Delete ${file.name}`}
                                                     >
                                                         🗑 Delete
                                                     </button>
@@ -448,7 +462,9 @@ export default function AdminPage() {
 
             {/* Toast */}
             {toast && (
-                <div className={`toast toast-${toast.type}`}>{toast.message}</div>
+                <div className={`toast toast-${toast.type}`} role="alert">
+                    {toast.message}
+                </div>
             )}
         </div>
     );

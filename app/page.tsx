@@ -2,64 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { formatFileSize } from "@/lib/utils";
-
-interface FileItem {
-  name: string;
-  size: number;
-  modified: string;
-  download_url: string;
-  curl_command: string;
-}
-
-function getFileColor(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  const colors: Record<string, string> = {
-    pdf: "bg-red-500/20 text-red-400",
-    doc: "bg-blue-500/20 text-blue-400",
-    docx: "bg-blue-500/20 text-blue-400",
-    md: "bg-emerald-500/20 text-emerald-400",
-    txt: "bg-gray-500/20 text-gray-400",
-    png: "bg-purple-500/20 text-purple-400",
-    jpg: "bg-purple-500/20 text-purple-400",
-    jpeg: "bg-purple-500/20 text-purple-400",
-    gif: "bg-purple-500/20 text-purple-400",
-    zip: "bg-yellow-500/20 text-yellow-400",
-    exe: "bg-orange-500/20 text-orange-400",
-    sh: "bg-green-500/20 text-green-400",
-  };
-  return colors[ext] || "bg-indigo-500/20 text-indigo-400";
-}
-
-function getFileExt(name: string): string {
-  return name.split(".").pop()?.toUpperCase().slice(0, 4) || "FILE";
-}
+import { useTheme } from "@/hooks/useTheme";
+import { FileItem, getFileColor, getFileExt } from "@/lib/constants";
 
 export default function HomePage() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
-
-  useEffect(() => {
-    if (document.documentElement.classList.contains("dark")) {
-      setTheme("dark");
-    } else {
-      setTheme("light");
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    if (theme === "light") {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setTheme("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setTheme("light");
-    }
-  };
+  const { theme, toggleTheme } = useTheme();
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -80,22 +31,23 @@ export default function HomePage() {
     fetchFiles();
   }, [fetchFiles]);
 
-  const copyToClipboard = async (text: string, index: number) => {
+  const copyToClipboard = useCallback(async (text: string, index: number) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
     } catch {
+      // Fallback for older browsers / insecure contexts
       const textarea = document.createElement("textarea");
       textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
     }
-  };
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -115,6 +67,7 @@ export default function HomePage() {
               onClick={toggleTheme}
               className="p-1.5 sm:p-2 rounded-lg text-lg hover:bg-[var(--glass)] transition-colors opacity-70 hover:opacity-100"
               title="Toggle theme"
+              aria-label="Toggle theme"
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
@@ -235,6 +188,7 @@ export default function HomePage() {
                         onClick={() => copyToClipboard(file.curl_command, index)}
                         className={`btn-ghost !px-2 !py-1 ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
                         title="Copy curl command"
+                        aria-label={`Copy curl command for ${file.name}`}
                       >
                         {copiedIndex === index ? "✓" : "📋"}
                       </button>
@@ -244,6 +198,7 @@ export default function HomePage() {
                       onClick={() => copyToClipboard(file.curl_command, index)}
                       className={`sm:hidden btn-ghost relative !py-1 !px-2 text-[11px] ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
                       title="Copy curl command"
+                      aria-label={`Copy curl command for ${file.name}`}
                     >
                       {copiedIndex === index ? "✓ Copied" : "📋 Copy cURL"}
                     </button>

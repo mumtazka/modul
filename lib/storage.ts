@@ -1,5 +1,7 @@
-// GitHub API-backed storage.
-// Files are committed directly to the repository's storage/ folder.
+/**
+ * GitHub API-backed storage.
+ * Files are committed directly to the repository's storage/ folder.
+ */
 
 const GITHUB_API = "https://api.github.com";
 
@@ -13,6 +15,24 @@ function getConfig() {
         throw new Error("GITHUB_TOKEN and GITHUB_REPO must be set in environment variables.");
     }
     return { token, repo, branch, storagePath };
+}
+
+/**
+ * Sanitize a filename to prevent path traversal and unsafe characters.
+ * - Strips directory segments (../ or /)
+ * - Replaces unsafe characters with underscores
+ * - Rejects empty or dot-only filenames
+ */
+function sanitizeFilename(filename: string): string {
+    // Strip any path components — only keep the basename
+    let safe = filename.replace(/^.*[\\\/]/, "");
+    // Replace characters that are unsafe for filesystems or URLs
+    safe = safe.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    // Reject hidden files and empty names
+    if (!safe || safe.startsWith(".") || safe === "_") {
+        safe = `file_${Date.now()}`;
+    }
+    return safe;
 }
 
 function githubHeaders(token: string) {
@@ -65,9 +85,10 @@ export async function listFiles(): Promise<FileInfo[]> {
     return files;
 }
 
+/** Get the SHA hash of a file in the repo (needed for updates/deletes). */
 export async function getFileSha(filename: string): Promise<string | null> {
     const { token, repo, branch, storagePath } = getConfig();
-    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const safeName = sanitizeFilename(filename);
 
     const res = await fetch(
         `${GITHUB_API}/repos/${repo}/contents/${storagePath}/${encodeURIComponent(safeName)}?ref=${branch}`,
@@ -79,9 +100,10 @@ export async function getFileSha(filename: string): Promise<string | null> {
     return data.sha ?? null;
 }
 
+/** Download a file's contents as a Buffer. */
 export async function downloadFileContent(filename: string): Promise<Buffer | null> {
     const { token, repo, branch, storagePath } = getConfig();
-    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const safeName = sanitizeFilename(filename);
 
     const res = await fetch(
         `${GITHUB_API}/repos/${repo}/contents/${storagePath}/${encodeURIComponent(safeName)}?ref=${branch}`,
@@ -96,10 +118,11 @@ export async function downloadFileContent(filename: string): Promise<Buffer | nu
     return Buffer.from(data.content.replace(/\n/g, ""), "base64");
 }
 
+/** Upload or update a file in the GitHub repo. */
 export async function saveFile(filename: string, buffer: Buffer): Promise<FileInfo> {
     const { token, repo, branch, storagePath } = getConfig();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const safeName = sanitizeFilename(filename);
     const path = `${storagePath}/${safeName}`;
 
     // Check if file exists to get SHA (required for updates)
@@ -136,9 +159,10 @@ export async function saveFile(filename: string, buffer: Buffer): Promise<FileIn
     };
 }
 
+/** Delete a file from the GitHub repo. */
 export async function deleteFileFromStorage(filename: string): Promise<boolean> {
     const { token, repo, branch, storagePath } = getConfig();
-    const safeName = filename.replace(/[^a-zA-Z0-9._\-]/g, "_");
+    const safeName = sanitizeFilename(filename);
     const path = `${storagePath}/${safeName}`;
 
     const sha = await getFileSha(safeName);
