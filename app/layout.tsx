@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "indexofmunas — Personal File Sharing",
+  title: "indexofmunas — Berbagi File Pribadi",
   description:
-    "Browse and download shared files. A simple, personal file sharing platform.",
+    "Jelajahi dan unduh file yang dibagikan. Platform berbagi file pribadi yang sederhana.",
   keywords: ["file sharing", "download", "files"],
   robots: "noindex, nofollow",  // personal app — keep out of search engines
 };
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="id" className={inter.variable} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

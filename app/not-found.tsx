@@ -10,12 +10,12 @@ export default function NotFound() {
                 >
                     🔍
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Page Not Found</h2>
+                <h2 className="text-xl font-semibold mb-2">Halaman Tidak Ditemukan</h2>
                 <p className="text-sm text-[var(--text-secondary)] mb-6">
-                    The page you&apos;re looking for doesn&apos;t exist or has been moved.
+                    Halaman yang Anda cari tidak ada atau telah dipindahkan.
                 </p>
                 <Link href="/" className="btn-primary inline-block">
-                    ← Back to Home
+                    ← Kembali ke Beranda
                 </Link>
             </div>
         </div>

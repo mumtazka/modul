@@ -21,7 +21,7 @@ export default function HomePage() {
       setFiles(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
@@ -59,15 +59,15 @@ export default function HomePage() {
               📁 indexofmunas
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
-              Browse and download shared files
+              Jelajahi dan unduh file yang dibagikan
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
               className="btn-ghost flex items-center justify-center !p-2 rounded-full w-9 h-9"
-              title="Toggle theme"
-              aria-label="Toggle theme"
+              title="Ubah tema"
+              aria-label="Ubah tema"
             >
               {theme === "dark" ? (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,8 +86,8 @@ export default function HomePage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              <span className="hidden sm:inline">Upload Files</span>
-              <span className="sm:hidden">Upload</span>
+              <span className="hidden sm:inline">Unggah File</span>
+              <span className="sm:hidden">Unggah</span>
             </a>
           </div>
         </div>
@@ -99,11 +99,11 @@ export default function HomePage() {
         {!loading && !error && (
           <div className="mb-6 flex items-center gap-4 animate-fade-in-up">
             <div className="glass-card px-4 py-2 text-sm">
-              <span className="text-[var(--text-secondary)]">Total files: </span>
+              <span className="text-[var(--text-secondary)]">Total file: </span>
               <span className="font-semibold text-[var(--accent)]">{files.length}</span>
             </div>
             <div className="glass-card px-4 py-2 text-sm">
-              <span className="text-[var(--text-secondary)]">Total size: </span>
+              <span className="text-[var(--text-secondary)]">Total ukuran: </span>
               <span className="font-semibold text-[var(--accent)]">
                 {formatFileSize(files.reduce((acc, f) => acc + f.size, 0))}
               </span>
@@ -134,7 +134,7 @@ export default function HomePage() {
             <div className="text-4xl mb-3">⚠️</div>
             <p className="text-[var(--danger)] font-medium">{error}</p>
             <button onClick={fetchFiles} className="btn-primary mt-4">
-              Retry
+              Coba lagi
             </button>
           </div>
         )}
@@ -145,9 +145,9 @@ export default function HomePage() {
             <div className="text-6xl mb-4" style={{ animation: "float 3s ease-in-out infinite" }}>
               📭
             </div>
-            <h3 className="text-lg font-semibold mb-2">No files yet</h3>
+            <h3 className="text-lg font-semibold mb-2">Belum ada file</h3>
             <p className="text-[var(--text-secondary)] text-sm">
-              Files will appear here once uploaded or placed in the storage folder.
+              File akan muncul di sini setelah diunggah.
             </p>
           </div>
         )}
@@ -194,13 +194,13 @@ export default function HomePage() {
                         value={file.curl_command}
                         className="text-[11px] font-mono bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] rounded px-2 py-1 w-32 md:w-56 outline-none focus:border-[var(--accent)] transition-colors cursor-text"
                         onClick={(e) => (e.target as HTMLInputElement).select()}
-                        title="cURL Command"
+                        title="Perintah cURL"
                       />
                       <button
                         onClick={() => copyToClipboard(file.curl_command, index)}
                         className={`btn-ghost !px-2 !py-1 ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
-                        title="Copy curl command"
-                        aria-label={`Copy curl command for ${file.name}`}
+                        title="Salin perintah cURL"
+                        aria-label={`Salin cURL untuk ${file.name}`}
                       >
                         {copiedIndex === index ? "✓" : "📋"}
                       </button>
@@ -209,17 +209,17 @@ export default function HomePage() {
                     <button
                       onClick={() => copyToClipboard(file.curl_command, index)}
                       className={`sm:hidden btn-ghost relative !py-1 !px-2 text-[11px] ${copiedIndex === index ? "!border-[var(--success)] !text-[var(--success)]" : ""}`}
-                      title="Copy curl command"
-                      aria-label={`Copy curl command for ${file.name}`}
+                      title="Salin cURL"
+                      aria-label={`Salin perintah cURL untuk ${file.name}`}
                     >
-                      {copiedIndex === index ? "✓ Copied" : "📋 Copy cURL"}
+                      {copiedIndex === index ? "✓ Tersalin" : "📋 Salin cURL"}
                     </button>
                     <a
                       href={file.download_url}
                       download={file.name}
                       className="btn-primary !py-1 !px-3 sm:!px-4 text-[11px] sm:text-xs inline-flex items-center gap-1"
                     >
-                      ⬇ <span className="hidden sm:inline">Download</span>
+                      ⬇ <span className="hidden sm:inline">Unduh</span>
                     </a>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[rgba(99,102,241,0.1)] mt-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center text-xs text-[var(--text-secondary)]">
-          indexofmunas — Personal file sharing
+          indexofmunas — Berbagi file pribadi
         </div>
       </footer>
     </div>

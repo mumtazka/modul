@@ -43,8 +43,7 @@ export default function AdminPage() {
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
             setFiles(data);
-        } catch {
-            showToast("Failed to load files", "error");
+            showToast("Gagal memuat file", "error");
         } finally {
             setLoading(false);
         }
@@ -78,10 +77,10 @@ export default function AdminPage() {
                 setIsAuthenticated(true);
                 setTokenInput("");
             } else {
-                setLoginError(data.error || "Invalid token");
+                setLoginError(data.error || "Token tidak valid");
             }
         } catch {
-            setLoginError("Failed to validate token. Please try again.");
+            setLoginError("Gagal memvalidasi token. Silakan coba lagi.");
         } finally {
             setLoginLoading(false);
         }
@@ -99,7 +98,7 @@ export default function AdminPage() {
 
         if (selectedFile.size > MAX_FILE_SIZE) {
             showToast(
-                `File too large (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Maximum is ${MAX_FILE_SIZE_LABEL}.`,
+                `File terlalu besar (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Maksimal adalah ${MAX_FILE_SIZE_LABEL}.`,
                 "error"
             );
             return;
@@ -119,10 +118,10 @@ export default function AdminPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || "Upload failed");
+                throw new Error(data.error || "Gagal mengunggah");
             }
 
-            showToast(`"${selectedFile.name}" uploaded successfully!`, "success");
+            showToast(`"${selectedFile.name}" berhasil diunggah!`, "success");
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
             fetchFiles();
@@ -139,7 +138,7 @@ export default function AdminPage() {
     const handleDelete = async (filename: string) => {
         if (
             !window.confirm(
-                `Are you sure you want to delete "${filename}"?\nThis action cannot be undone.`
+                `Apakah Anda yakin ingin menghapus "${filename}"?\nTindakan ini tidak dapat dibatalkan.`
             )
         )
             return;
@@ -153,10 +152,10 @@ export default function AdminPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || "Delete failed");
+                throw new Error(data.error || "Gagal menghapus");
             }
 
-            showToast(`"${filename}" deleted`, "success");
+            showToast(`"${filename}" dihapus`, "success");
             fetchFiles();
         } catch (err) {
             showToast(
@@ -190,19 +189,19 @@ export default function AdminPage() {
                     <div>
                         <a href="/" className="inline-block">
                             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
-                                🔐 Admin Panel
+                                🔐 Panel Admin
                             </h1>
                         </a>
                         <p className="text-sm text-[var(--text-secondary)] mt-1">
-                            Upload and manage files
+                            Unggah dan kelola file
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={toggleTheme}
                             className="btn-ghost flex items-center justify-center !p-2 rounded-full w-9 h-9"
-                            title="Toggle theme"
-                            aria-label="Toggle theme"
+                            title="Ubah tema"
+                            aria-label="Ubah tema"
                         >
                             {theme === "dark" ? (
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -244,9 +243,9 @@ export default function AdminPage() {
                                 >
                                     🔑
                                 </div>
-                                <h2 className="text-lg font-semibold">Enter Admin Token</h2>
+                                <h2 className="text-lg font-semibold">Masukkan Token Admin</h2>
                                 <p className="text-sm text-[var(--text-secondary)] mt-1">
-                                    Enter your token to access the admin panel
+                                    Masukkan token Anda untuk mengakses panel admin
                                 </p>
                             </div>
                             {loginError && (
@@ -260,7 +259,7 @@ export default function AdminPage() {
                                     value={tokenInput}
                                     onChange={(e) => setTokenInput(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && handleSaveToken()}
-                                    placeholder="Your admin token..."
+                                    placeholder="Token admin Anda..."
                                     className="input-field flex-1"
                                     disabled={loginLoading}
                                     autoComplete="current-password"
@@ -272,10 +271,10 @@ export default function AdminPage() {
                                 >
                                     {loginLoading ? (
                                         <>
-                                            <span className="spinner" /> Verifying...
+                                            <span className="spinner" /> Memverifikasi...
                                         </>
                                     ) : (
-                                        "Login"
+                                        "Masuk"
                                     )}
                                 </button>
                             </div>
@@ -289,9 +288,9 @@ export default function AdminPage() {
                         {/* Upload Area */}
                         <div className="glass-card p-6">
                             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                📤 Upload File
+                                📤 Unggah File
                                 <span className="text-xs font-normal text-[var(--text-secondary)]">
-                                    (max {MAX_FILE_SIZE_LABEL})
+                                    (maks {MAX_FILE_SIZE_LABEL})
                                 </span>
                             </h2>
 
@@ -323,7 +322,7 @@ export default function AdminPage() {
                                             {formatFileSize(selectedFile.size)}
                                             {selectedFile.size > MAX_FILE_SIZE && (
                                                 <span className="text-[var(--danger)] ml-2">
-                                                    ⚠️ Exceeds {MAX_FILE_SIZE_LABEL} limit
+                                                    ⚠️ Melebihi batas {MAX_FILE_SIZE_LABEL}
                                                 </span>
                                             )}
                                         </p>
@@ -331,10 +330,10 @@ export default function AdminPage() {
                                 ) : (
                                     <div>
                                         <p className="font-medium">
-                                            Drop a file here or click to browse
+                                            Letakkan file di sini atau klik untuk mencari
                                         </p>
                                         <p className="text-sm text-[var(--text-secondary)] mt-1">
-                                            Any file type accepted (max {MAX_FILE_SIZE_LABEL})
+                                            Menerima semua jenis file (maks {MAX_FILE_SIZE_LABEL})
                                         </p>
                                     </div>
                                 )}
@@ -349,7 +348,7 @@ export default function AdminPage() {
                                         }}
                                         className="btn-ghost"
                                     >
-                                        Cancel
+                                        Batal
                                     </button>
                                     <button
                                         onClick={handleUpload}
@@ -358,10 +357,10 @@ export default function AdminPage() {
                                     >
                                         {uploading ? (
                                             <>
-                                                <span className="spinner" /> Uploading...
+                                                <span className="spinner" /> Mengunggah...
                                             </>
                                         ) : (
-                                            "⬆ Upload"
+                                            "⬆ Unggah"
                                         )}
                                     </button>
                                 </div>
@@ -382,7 +381,7 @@ export default function AdminPage() {
                                     className="btn-ghost text-xs flex items-center gap-1"
                                     disabled={loading}
                                 >
-                                    🔄 Refresh
+                                    🔄 Segarkan
                                 </button>
                             </div>
 
@@ -406,8 +405,7 @@ export default function AdminPage() {
                                 <div className="glass-card p-12 text-center">
                                     <div className="text-5xl mb-3">📭</div>
                                     <p className="text-[var(--text-secondary)]">
-                                        No files yet. Upload something or place files in the storage
-                                        folder!
+                                        Belum ada file. Unggah sesuatu atau masukkan file ke folder storage!
                                     </p>
                                 </div>
                             )}
@@ -461,7 +459,7 @@ export default function AdminPage() {
                                                         className="btn-danger text-xs"
                                                         aria-label={`Delete ${file.name}`}
                                                     >
-                                                        🗑 Delete
+                                                        🗑 Hapus
                                                     </button>
                                                 </div>
                                             </div>
