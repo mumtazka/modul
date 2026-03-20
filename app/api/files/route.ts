@@ -8,9 +8,10 @@ export async function GET() {
         const files = await listFiles();
         return NextResponse.json(files);
     } catch (error) {
-        console.error("Error listing files:", error);
+        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error("Error listing files:", message);
         return NextResponse.json(
-            { error: "Failed to list files" },
+            { error: "Failed to list files", detail: message },
             { status: 500 }
         );
     }
