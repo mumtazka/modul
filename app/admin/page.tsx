@@ -373,9 +373,9 @@ export default function AdminPage() {
                             </div>
 
                             {loading && (
-                                <div className="space-y-3">
+                                <div className="glass-card overflow-hidden divide-y divide-[var(--border-color)]">
                                     {[1, 2, 3].map((i) => (
-                                        <div key={i} className="glass-card p-5">
+                                        <div key={i} className="p-5 even:bg-[rgba(0,0,0,0.02)] dark:even:bg-[rgba(255,255,255,0.02)]">
                                             <div className="flex items-center gap-4">
                                                 <div className="skeleton w-9 h-9 rounded-lg" />
                                                 <div className="flex-1 space-y-2">
@@ -399,11 +399,11 @@ export default function AdminPage() {
                             )}
 
                             {!loading && files.length > 0 && (
-                                <div className="space-y-3">
+                                <div className="glass-card overflow-hidden divide-y divide-[var(--border-color)]">
                                     {files.map((file, index) => (
                                         <div
                                             key={file.name}
-                                            className="glass-card p-4 animate-fade-in-up"
+                                            className="p-4 hover:bg-[var(--glass)] transition-colors animate-fade-in-up even:bg-[rgba(0,0,0,0.02)] dark:even:bg-[rgba(255,255,255,0.02)]"
                                             style={{ animationDelay: `${index * 40}ms` }}
                                         >
                                             <div className="flex items-center gap-3">

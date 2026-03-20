@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FileVault — Personal File Sharing",
+  title: "indexofmunas — Personal File Sharing",
   description:
     "Browse and download shared files. A simple, personal file sharing platform.",
   keywords: ["file sharing", "download", "files"],

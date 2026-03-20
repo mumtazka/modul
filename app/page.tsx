@@ -56,7 +56,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
-              📁 FileVault
+              📁 indexofmunas
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">
               Browse and download shared files
@@ -101,9 +101,9 @@ export default function HomePage() {
 
         {/* Loading */}
         {loading && (
-          <div className="space-y-3">
+          <div className="glass-card overflow-hidden divide-y divide-[var(--border-color)]">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="glass-card p-5">
+              <div key={i} className="p-5 even:bg-[rgba(0,0,0,0.02)] dark:even:bg-[rgba(255,255,255,0.02)]">
                 <div className="flex items-center gap-4">
                   <div className="skeleton w-9 h-9 rounded-lg flex-shrink-0" />
                   <div className="flex-1 space-y-2">
@@ -142,11 +142,11 @@ export default function HomePage() {
 
         {/* File list */}
         {!loading && !error && files.length > 0 && (
-          <div className="space-y-3">
+          <div className="glass-card overflow-hidden divide-y divide-[var(--border-color)]">
             {files.map((file, index) => (
               <div
                 key={file.name}
-                className="glass-card p-4 sm:p-5 animate-fade-in-up"
+                className="p-4 sm:p-5 hover:bg-[var(--glass)] even:bg-[rgba(0,0,0,0.02)] dark:even:bg-[rgba(255,255,255,0.02)] transition-colors animate-fade-in-up"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -220,7 +220,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[rgba(99,102,241,0.1)] mt-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center text-xs text-[var(--text-secondary)]">
-          FileVault — Personal file sharing
+          indexofmunas — Personal file sharing
         </div>
       </footer>
     </div>
