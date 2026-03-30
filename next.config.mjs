@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Increase body size limit for file uploads (max 50mb)
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '50mb',
+        },
+    },
     // Prevent leaking framework info
     poweredByHeader: false,
 
