@@ -115,10 +115,17 @@ export default function AdminPage() {
                 body: formData,
             });
 
-            const data = await res.json();
+            let data;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                throw new Error(`Server returned non-JSON error (Status ${res.status}): ${text.slice(0, 100)}...`);
+            }
 
             if (!res.ok) {
-                throw new Error(data.error || "Gagal mengunggah");
+                throw new Error(data?.error || "Gagal mengunggah");
             }
 
             showToast(`"${selectedFile.name}" berhasil diunggah!`, "success");
